@@ -1,28 +1,12 @@
+import { prisma } from '@/lib/prisma';
 import {
   ChevronRightIcon,
   MagnifyingGlassIcon,
 } from '@heroicons/react/20/solid';
 
-let users = [
-  {
-    name: 'Kenneth Bell',
-    email: 'kenneth.bell@example.com',
-  },
-  {
-    name: 'Mattie Conway',
-    email: 'mattie.conway@example.com',
-  },
-  {
-    name: 'Lola B. Graham',
-    email: 'lolab.graham@example.com',
-  },
-  {
-    name: 'Cara Fuentes',
-    email: 'cara.fuentes@example.com',
-  },
-];
+export default async function Users() {
+  const users = await prisma.user.findMany();
 
-export default function Users() {
   return (
     <div className="min-h-screen bg-gray-50 px-8 pt-12">
       {/* HEADER ROW */}
@@ -65,6 +49,9 @@ export default function Users() {
                 <thead className="bg-gray-50">
                   <tr>
                     <th className="py-3.5 pl-6 pr-3 text-left text-sm font-semibold text-gray-900">
+                      ID
+                    </th>
+                    <th className="py-3.5 pl-6 pr-3 text-left text-sm font-semibold text-gray-900">
                       Name
                     </th>
                     <th className="px-3 py-3.5 text-left text-sm font-semibold text-gray-900">
@@ -77,7 +64,10 @@ export default function Users() {
                 </thead>
                 <tbody className="divide-y divide-gray-200 bg-white">
                   {users.map((user) => (
-                    <tr key={user.email}>
+                    <tr key={user.id}>
+                      <td className="whitespace-nowrap py-4 pl-6 pr-3 text-sm font-medium text-gray-900">
+                        {user.id}
+                      </td>
                       <td className="whitespace-nowrap py-4 pl-6 pr-3 text-sm font-medium text-gray-900">
                         {user.name}
                       </td>
