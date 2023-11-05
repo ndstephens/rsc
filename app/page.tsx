@@ -1,3 +1,4 @@
+import Link from 'next/link';
 import {
   ChevronRightIcon,
   MagnifyingGlassIcon,
@@ -5,8 +6,17 @@ import {
 
 import { prisma } from '@/lib/prisma';
 
-export default async function Users() {
-  const users = await prisma.user.findMany();
+export default async function Users({
+  searchParams,
+}: {
+  searchParams: { [key: string]: string | string[] | undefined };
+}) {
+  const page = Number(searchParams.page ?? '1') || 1;
+
+  const users = await prisma.user.findMany({
+    take: 6,
+    skip: (page - 1) * 6,
+  });
 
   return (
     <div className="min-h-screen bg-gray-50 px-8 pt-12">
@@ -91,6 +101,11 @@ export default async function Users() {
             </div>
           </div>
         </div>
+      </div>
+
+      {/* PAGINATION */}
+      <div>
+        <Link href={`/?page=${page + 1}`}>Next</Link>
       </div>
     </div>
   );
