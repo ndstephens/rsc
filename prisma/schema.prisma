@@ -1,6 +1,8 @@
 // This is your Prisma schema file,
 // learn more about it in the docs: https://pris.ly/d/prisma-schema
 
+// When you update the schema, run `npx prima generate` to update the Prisma Client
+
 // To run Prisma Studio locally, use the `npx prisma studio` command
 
 generator client {

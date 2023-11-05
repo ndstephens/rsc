@@ -1,8 +1,9 @@
-import { prisma } from '@/lib/prisma';
 import {
   ChevronRightIcon,
   MagnifyingGlassIcon,
 } from '@heroicons/react/20/solid';
+
+import { prisma } from '@/lib/prisma';
 
 export default async function Users() {
   const users = await prisma.user.findMany();
