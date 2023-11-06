@@ -1,3 +1,22 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+@layer base {
+  /** RESET */
+  :where(a, button, nav *) {
+    @apply select-none;
+  }
+
+  /** TAILWIND PREFLIGHT OVERRIDES */
+  button,
+  button * {
+    @apply leading-none;
+  }
+
+  button,
+  select {
+    text-transform: inherit;
+    letter-spacing: inherit;
+  }
+}
