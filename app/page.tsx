@@ -1,8 +1,7 @@
 import Link from 'next/link';
-import {
-  ChevronRightIcon,
-  MagnifyingGlassIcon,
-} from '@heroicons/react/20/solid';
+import { ChevronRightIcon } from '@heroicons/react/20/solid';
+
+import { SearchInput } from '@/components/search-input';
 
 import { prisma } from '@/lib/prisma';
 
@@ -11,22 +10,35 @@ export default async function Users({
 }: {
   searchParams: { [key: string]: string | string[] | undefined };
 }) {
-  const totalUsers = await prisma.user.count();
+  const search =
+    typeof searchParams.search === 'string' ? searchParams.search : '';
+  const totalUsers = await prisma.user.count({
+    where: {
+      name: {
+        contains: search,
+      },
+    },
+  });
   const perPage = 7;
-  const maxPage = Math.ceil(totalUsers / perPage);
+  const maxPage = Math.max(Math.ceil(totalUsers / perPage), 1);
 
   // page remains a number between 1 and maxPage, regardless of the query string
   const page = Math.min(
     Math.max(Number(searchParams.page ?? '1') || 1, 1),
-    maxPage
+    maxPage,
   );
 
   const users = await prisma.user.findMany({
     take: perPage,
     skip: (page - 1) * perPage,
+    where: {
+      name: {
+        contains: search,
+      },
+    },
   });
 
-  const currentRangeStart = (page - 1) * perPage + 1;
+  const currentRangeStart = totalUsers > 0 ? (page - 1) * perPage + 1 : 0;
   const currentRangeEnd = Math.min(page * perPage, totalUsers);
 
   return (
@@ -35,21 +47,7 @@ export default async function Users({
       <div className="flex items-center justify-between">
         {/* SEARCH INPUT */}
         <div className="w-80">
-          <div className="relative mt-1 rounded-md shadow-sm">
-            <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3">
-              <MagnifyingGlassIcon
-                className="h-5 w-5 text-gray-400"
-                aria-hidden="true"
-              />
-            </div>
-            <input
-              type="text"
-              name="search"
-              id="search"
-              className="block w-full rounded-md border-gray-300 pl-10 text-sm focus:border-gray-400 focus:outline-none focus:ring-0"
-              placeholder="Search"
-            />
-          </div>
+          <SearchInput search={search} />
         </div>
         {/* ADD USER BUTTON */}
         <div className="ml-16 mt-0 flex-none">
