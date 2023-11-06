@@ -11,12 +11,23 @@ export default async function Users({
 }: {
   searchParams: { [key: string]: string | string[] | undefined };
 }) {
-  const page = Number(searchParams.page ?? '1') || 1;
+  const totalUsers = await prisma.user.count();
+  const perPage = 7;
+  const maxPage = Math.ceil(totalUsers / perPage);
+
+  // page remains a number between 1 and maxPage, regardless of the query string
+  const page = Math.min(
+    Math.max(Number(searchParams.page ?? '1') || 1, 1),
+    maxPage
+  );
 
   const users = await prisma.user.findMany({
-    take: 6,
-    skip: (page - 1) * 6,
+    take: perPage,
+    skip: (page - 1) * perPage,
   });
+
+  const currentRangeStart = (page - 1) * perPage + 1;
+  const currentRangeEnd = Math.min(page * perPage, totalUsers);
 
   return (
     <div className="min-h-screen bg-gray-50 px-8 pt-12">
@@ -104,8 +115,28 @@ export default async function Users({
       </div>
 
       {/* PAGINATION */}
-      <div>
-        <Link href={`/?page=${page + 1}`}>Next</Link>
+      <div className="mt-4 flex items-center justify-between">
+        <p className="select-none text-sm text-gray-700">
+          Showing <span className="font-semibold">{currentRangeStart}</span> to{' '}
+          <span className="font-semibold">{currentRangeEnd}</span> of{' '}
+          <span className="font-semibold">{totalUsers}</span> users
+        </p>
+        <div className="space-x-2">
+          <Link
+            href={`/?page=${page - 1 || 1}`}
+            aria-disabled={page <= 1}
+            className="inline-flex items-center justify-center rounded-md border border-gray-300 bg-white px-3 py-2 text-sm font-semibold text-gray-900 hover:bg-gray-50 aria-disabled:pointer-events-none  aria-disabled:opacity-50"
+          >
+            Previous
+          </Link>
+          <Link
+            href={`/?page=${page + 1}`}
+            aria-disabled={page >= maxPage}
+            className="inline-flex items-center justify-center rounded-md border border-gray-300 bg-white px-3 py-2 text-sm font-semibold text-gray-900 hover:bg-gray-50 aria-disabled:pointer-events-none  aria-disabled:opacity-50"
+          >
+            Next
+          </Link>
+        </div>
       </div>
     </div>
   );
