@@ -1,6 +1,6 @@
 'use client';
 
-import { useTransition } from 'react';
+import { useState, useTransition } from 'react';
 import { useRouter } from 'next/navigation';
 import { MagnifyingGlassIcon } from '@heroicons/react/20/solid';
 
@@ -10,6 +10,8 @@ export function SearchInput({ search }: { search: string }) {
   const router = useRouter();
 
   const [isPending, startTransition] = useTransition();
+  const [timeoutId, setTimeoutId] = useState<NodeJS.Timeout>();
+  const isSearching = isPending || timeoutId;
 
   return (
     <div className="relative mt-1 rounded-md shadow-sm">
@@ -27,16 +29,21 @@ export function SearchInput({ search }: { search: string }) {
         placeholder="Search"
         defaultValue={search}
         onChange={(event) => {
-          startTransition(() => {
-            if (event.target.value.trim()) {
-              router.push(`/?search=${event.target.value.trim()}`);
-            } else {
-              router.push('/');
-            }
-          });
+          clearTimeout(timeoutId);
+          const id = setTimeout(() => {
+            startTransition(() => {
+              if (event.target.value.trim()) {
+                router.push(`/?search=${event.target.value.trim()}`);
+              } else {
+                router.push('/');
+              }
+              setTimeoutId(undefined);
+            });
+          }, 300);
+          setTimeoutId(id);
         }}
       />
-      {isPending && (
+      {isSearching && (
         <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-3">
           <Spinner
             className="w-5 animate-spin text-gray-400"
