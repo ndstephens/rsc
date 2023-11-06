@@ -10,8 +10,11 @@ export default async function Users({
 }: {
   searchParams: { [key: string]: string | string[] | undefined };
 }) {
+  // `search` search param
   const search =
-    typeof searchParams.search === 'string' ? searchParams.search : '';
+    typeof searchParams.search === 'string' ? searchParams.search.trim() : '';
+
+  // Total number of users matching the search param
   const totalUsers = await prisma.user.count({
     where: {
       name: {
@@ -19,15 +22,38 @@ export default async function Users({
       },
     },
   });
+
+  // Max results displayed per page
   const perPage = 7;
+
+  // Max number of pages for current search results
   const maxPage = Math.max(Math.ceil(totalUsers / perPage), 1);
 
-  // page remains a number between 1 and maxPage, regardless of the query string
+  // `page` search param (constrained to a number between 1 and maxPage)
   const page = Math.min(
     Math.max(Number(searchParams.page ?? '1') || 1, 1),
     maxPage,
   );
 
+  // Pagination UI content values
+  const currentRangeStart = totalUsers > 0 ? (page - 1) * perPage + 1 : 0;
+  const currentRangeEnd = Math.min(page * perPage, totalUsers);
+
+  // Pagination `Previous` UI button
+  const previousPageSearchParams = new URLSearchParams();
+  if (search) {
+    previousPageSearchParams.set('search', search);
+  }
+  previousPageSearchParams.set('page', String(page - 1 || 1));
+
+  // Pagination `Next` UI button
+  const nextPageSearchParams = new URLSearchParams();
+  if (search) {
+    nextPageSearchParams.set('search', search);
+  }
+  nextPageSearchParams.set('page', String(Math.min(page + 1, maxPage)));
+
+  // Fetch the users for the current page
   const users = await prisma.user.findMany({
     take: perPage,
     skip: (page - 1) * perPage,
@@ -38,18 +64,15 @@ export default async function Users({
     },
   });
 
-  const currentRangeStart = totalUsers > 0 ? (page - 1) * perPage + 1 : 0;
-  const currentRangeEnd = Math.min(page * perPage, totalUsers);
-
   return (
     <div className="min-h-screen bg-gray-50 px-8 pt-12">
       {/* HEADER ROW */}
       <div className="flex items-center justify-between">
-        {/* SEARCH INPUT */}
+        {/* Search input */}
         <div className="w-80">
           <SearchInput search={search} />
         </div>
-        {/* ADD USER BUTTON */}
+        {/* `Add user` button */}
         <div className="ml-16 mt-0 flex-none">
           <button
             type="button"
@@ -114,28 +137,48 @@ export default async function Users({
 
       {/* PAGINATION */}
       <div className="mt-4 flex items-center justify-between">
+        {/* Content */}
         <p className="select-none text-sm text-gray-700">
           Showing <span className="font-semibold">{currentRangeStart}</span> to{' '}
           <span className="font-semibold">{currentRangeEnd}</span> of{' '}
           <span className="font-semibold">{totalUsers}</span> users
         </p>
+        {/* Buttons */}
         <div className="space-x-2">
-          <Link
-            href={`/?page=${page - 1 || 1}`}
-            aria-disabled={page <= 1}
-            className="inline-flex items-center justify-center rounded-md border border-gray-300 bg-white px-3 py-2 text-sm font-semibold text-gray-900 hover:bg-gray-50 aria-disabled:pointer-events-none  aria-disabled:opacity-50"
+          <PaginationLink
+            href={`/?${previousPageSearchParams.toString()}`}
+            disabled={page <= 1}
           >
             Previous
-          </Link>
-          <Link
-            href={`/?page=${page + 1}`}
-            aria-disabled={page >= maxPage}
-            className="inline-flex items-center justify-center rounded-md border border-gray-300 bg-white px-3 py-2 text-sm font-semibold text-gray-900 hover:bg-gray-50 aria-disabled:pointer-events-none  aria-disabled:opacity-50"
+          </PaginationLink>
+          <PaginationLink
+            href={`/?${nextPageSearchParams.toString()}`}
+            disabled={page >= maxPage}
           >
             Next
-          </Link>
+          </PaginationLink>
         </div>
       </div>
     </div>
+  );
+}
+
+//* =============================================
+//*             PAGINATION LINK                 =
+//*==============================================
+type PaginationLinkProps = {
+  href: string;
+  disabled: boolean;
+  children: React.ReactNode;
+};
+function PaginationLink({ href, disabled, children }: PaginationLinkProps) {
+  return (
+    <Link
+      href={href}
+      aria-disabled={disabled}
+      className="inline-flex items-center justify-center rounded-md border border-gray-300 bg-white px-3 py-2 text-sm font-semibold text-gray-900 hover:bg-gray-50 aria-disabled:pointer-events-none  aria-disabled:opacity-50"
+    >
+      {children}
+    </Link>
   );
 }

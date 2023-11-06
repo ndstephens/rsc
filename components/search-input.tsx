@@ -22,7 +22,11 @@ export function SearchInput({ search }: { search: string }) {
         placeholder="Search"
         defaultValue={search}
         onChange={(event) => {
-          router.push(`/?search=${event.target.value}`);
+          if (event.target.value.trim()) {
+            router.push(`/?search=${event.target.value.trim()}`);
+          } else {
+            router.push('/');
+          }
         }}
       />
     </div>
