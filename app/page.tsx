@@ -10,6 +10,9 @@ export default async function Users({
 }: {
   searchParams: { [key: string]: string | string[] | undefined };
 }) {
+  // Fake db response delay
+  await new Promise((resolve) => setTimeout(resolve, 1500));
+
   // `search` search param
   const search =
     typeof searchParams.search === 'string' ? searchParams.search.trim() : '';
